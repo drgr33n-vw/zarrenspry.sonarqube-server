@@ -13,7 +13,7 @@ postgres service, checkout my postgres collection.
 | ---- | ------------| --------|
 | os_arch | Target architecture | x64 |
 | locale | Target locale | en_GB.UTF-8 |
-| temurin_version | Temurin (AdoptOpenJDK) Version | <table><thead><tr><th>Name</th><th>Description</th><th>Default</th></tr></thead><tbody><tr><td>major</td><td>Temurin major version.</td><td>11/td></tr><tr><td>minor</td><td>Temurin minor version.</td><td>0</td></tr><tr><td>patch</td><td>Temurin patch version.</td><td>13</td></tr><tr><td>patch</td><td>Temurin build number.</td><td>8</td></tr></tbody></table> |
+| temurin_version | Temurin (AdoptOpenJDK) Version | <table><thead><tr><th>Name</th><th>Description</th><th>Default</th></tr></thead><tbody><tr><td>major</td><td>Temurin major version.</td><td>11</td></tr><tr><td>minor</td><td>Temurin minor version.</td><td>0</td></tr><tr><td>patch</td><td>Temurin patch version.</td><td>13</td></tr><tr><td>patch</td><td>Temurin build number.</td><td>8</td></tr></tbody></table> |
 | sonarqube_installation_directory | Target installation directory | /opt |
 | sonarqube_web_javaopts | Launch java opts | -Xmx512m -Xms128m -XX:+HeapDumpOnOutOfMemoryError |
 | sonarqube_web_host | Host address to listen for web connections | 0.0.0.0 |
