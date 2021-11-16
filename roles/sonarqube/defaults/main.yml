@@ -1,0 +1,97 @@
+---
+os_arch: x64
+locale: en_GB.UTF-8
+temurin_version:
+  major: 11
+  minor: 0
+  patch: 13
+  build: 8
+sonarqube_installation_directory: "/opt"
+sonarqube_web_javaopts: -Xmx512m -Xms128m -XX:+HeapDumpOnOutOfMemoryError
+sonarqube_web_host: 0.0.0.0
+sonarqube_web_context: "" # OK to leave blank.
+sonarqube_web_port: 9000
+# The JWT secret was generated using the following command
+# echo -n "superl33tp455w0rd" | openssl dgst -sha256 -hmac "key" -binary | base64
+# This should be updated if you intend on using this role for production.
+sonarqube_auth_jwt_secret: 9peL46dMerbJ04McS58bzJ0ybK5rMwCiUu+MzPnRIyw=
+sonarqube_system_user: sonar
+sonarqube_version:
+  major: 9
+  minor: 1
+  patch: 0
+  build: 47736
+database:
+  sonarqube:
+    host: 127.0.0.1
+    name: sonar
+    owner: sonar
+    username: sonar
+    password: password
+    enabled: true
+
+sonarqube_sso_enabled: false
+# Name of the header to get the user login.
+# Only alphanumeric, '.' and '@' characters are allowed
+sonarqube_sso_headers:
+  login: X-Forwarded-Login
+  name: X-Forwarded-Name
+  email: X-Forwarded-Email
+  groups: X-Forwarded-Groups
+sonarqube_sso_refresh_interval: 5
+sonarqube_auth_downcase: false
+sonarqube_ldap_enabled: false
+sonarqube_ldap_host: 127.0.0.1
+sonarqube_ldap_port: 389
+sonarqube_ldap_binddn: ""
+sonarqube_ldap_bind_password: ""
+# Possible values: simple | CRAM-MD5 | DIGEST-MD5 | GSSAPI See http://java.sun.com/products/jndi/tutorial/ldap/security/auth.html
+sonarqube_ldap_auth_method: simple
+sonarqube_ldap_realm: example.local
+sonarqube_ldap_cxfactory: ""
+sonarqube_ldap_starttls: false
+sonarqube_ldap_follow_referals: true
+sonarqube_ldap_user_mapping:
+  basedn: cn=users,dc=example,dc=local
+  request: "(&(objectClass=inetOrgPerson)(uid={login}))"
+  real_name: cn
+  email: mail
+sonarqube_ldap_group_mapping:
+  basedn:
+  request: "(&(objectClass=groupOfUniqueNames)(uniqueMember={dn}))"
+  id: cn
+sonarqube_ce_javaopts: "-Xmx512m -Xms128m -XX:+HeapDumpOnOutOfMemoryError -server"
+sonarqube_elasticsearch_javaopts: "-Xmx512m -Xms512m -XX:MaxDirectMemorySize=256m -XX:+HeapDumpOnOutOfMemoryError"
+sonarqube_elasticsearch_port: 9001
+sonarqube_update_center:
+  enabled: false
+  proxy_enabled: false
+  proxy_config:
+    http.proxyHost: ""
+    http.proxyPort: ""
+    https.proxyHost: ""
+    https.proxyPort: ""
+# Supported values are INFO (default), DEBUG and TRACE
+sonarqube_loglevel:
+  global: INFO
+  app: INFO
+  web: INFO
+  ce: INFO
+  es: INFO
+sonarqube_log_path: logs
+# Rolling policy of log files
+#    - based on time if value starts with "time:", for example by day ("time:yyyy-MM-dd")
+#      or by month ("time:yyyy-MM")
+#    - based on size if value starts with "size:", for example "size:10MB"
+#    - disabled if value is "none".  That needs logs to be managed by an external system like logrotate.
+sonarqube_log_rolling_policy: "time:yyyy-MM-dd"
+# Maximum number of files to keep if a rolling policy is enabled.
+#    - maximum value is 20 on size rolling policy
+#    - unlimited on time rolling policy. Set to zero to disable old file purging.
+sonarqube_log_max_files: 7
+sonarqube_log_web_access: "true"
+# Telemetry - Share anonymous SonarQube statistics
+# By sharing anonymous SonarQube statistics, you help us understand how SonarQube is used so we can improve the product to work even better for you.
+# We don't collect source code or IP addresses. And we don't share the data with anyone else.
+# To see an example of the data shared: login as a global administrator, call the WS api/system/info and check the Statistics field.
+sonarqube_enable_telemetry: "false"

@@ -1,0 +1,123 @@
+---
+- name: Create system user
+  become: true
+  ansible.builtin.user:
+    name: "{{ sonarqube_system_user }}"
+    system: true
+    state: present
+    create_home: false
+
+- name: Create database users
+  become: true
+  become_user: postgres
+  community.postgresql.postgresql_user:
+    name: "{{ _db.username }}"
+    password: "{{ _db.password }}"
+    conn_limit: "-1"
+  loop: "{{ database | dict2items | map(attribute='value') | list }}"
+  loop_control:
+    loop_var: _db
+  when: _db.enabled | bool
+  no_log: false
+
+- name: Create databases
+  become: true
+  become_user: postgres
+  community.postgresql.postgresql_db:
+    name: "{{ _db.name }}"
+    owner: "{{ _db.username }}"
+    encoding: UTF-8
+    lc_collate: "{{ locale }}"
+    lc_ctype: "{{ locale }}"
+    template: template0
+  loop: "{{ database | dict2items | map(attribute='value') | list }}"
+  loop_control:
+    loop_var: _db
+  when: _db.enabled | bool
+  no_log: false
+
+- name: Grant privs on db
+  become: true
+  become_user: postgres
+  community.postgresql.postgresql_privs:
+    database: "{{ _db.name }}"
+    role: "{{ _db.username }}"
+    state: present
+    privs: ALL
+    type: database
+  loop: "{{ database | dict2items | map(attribute='value') | list }}"
+  loop_control:
+    loop_var: _db
+  when: _db.enabled | bool
+  no_log: true
+
+- name: Unpack sonarqube to installation direcotory
+  become: true
+  ansible.builtin.unarchive:
+    src: "{{ sonarqube_base_url }}/sonarqube-{{ sonarqube_version.major }}.{{ sonarqube_version.minor }}.{{ sonarqube_version.patch }}.{{ sonarqube_version.build }}.zip"
+    dest: "{{ sonarqube_installation_directory }}"
+    creates: "{{ sonarqube_installation_directory }}/sonarqube-{{ sonarqube_version.major }}.{{ sonarqube_version.minor }}.{{ sonarqube_version.patch }}.{{ sonarqube_version.build }}"
+    owner: "{{ sonarqube_system_user }}"
+    group: "{{ sonarqube_system_user }}"
+    remote_src: true
+
+- name: Create JDK dest directory
+  become: true
+  ansible.builtin.file:
+    path: "{{ sonarqube_installation_directory }}/sonarqube-{{ sonarqube_version.major }}.{{ sonarqube_version.minor }}.{{ sonarqube_version.patch }}.{{ sonarqube_version.build }}/jdk"
+    owner: "{{ sonarqube_system_user }}"
+    group: "{{ sonarqube_system_user }}"
+    mode: 0770
+    state: directory
+
+- name: Unpack JDK to installation directory
+  become: true
+  ansible.builtin.unarchive:
+    src: "{{ temurin_base_url }}/temurin{{ temurin_version.major }}-binaries/releases/download/jdk-{{ temurin_version.major }}.{{ temurin_version.minor }}.{{ temurin_version.patch }}%2B{{ temurin_version.build }}/OpenJDK11U-jdk_x64_linux_hotspot_{{ temurin_version.major }}.{{ temurin_version.minor }}.{{ temurin_version.patch }}_{{ temurin_version.build }}.tar.gz"
+    dest: "{{ sonarqube_installation_directory }}/sonarqube-{{ sonarqube_version.major }}.{{ sonarqube_version.minor }}.{{ sonarqube_version.patch }}.{{ sonarqube_version.build }}/jdk"
+    creates: "{{ sonarqube_installation_directory }}/sonarqube-{{ sonarqube_version.major }}.{{ sonarqube_version.minor }}.{{ sonarqube_version.patch }}.{{ sonarqube_version.build }}/jdk/release"
+    remote_src: true
+    owner: "{{ sonarqube_system_user }}"
+    group: "{{ sonarqube_system_user }}"
+    extra_opts:
+      - "--strip-components=1"
+
+- name: Copy sonarqube config to dest
+  become: true
+  become_user: "{{ sonarqube_system_user }}"
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ sonarqube_installation_directory }}/sonarqube-{{ sonarqube_version.major }}.{{ sonarqube_version.minor }}.{{ sonarqube_version.patch }}.{{ sonarqube_version.build }}/conf/{{ item }}"
+    owner: "{{ sonarqube_system_user }}"
+    group: "{{ sonarqube_system_user }}"
+  loop:
+    - sonar.properties
+    - wrapper.conf
+
+- name: Create the sonarqube systemd service
+  become: true
+  ansible.builtin.template:
+    src: "sonarqube.service.j2"
+    dest: "/lib/systemd/system/sonarqube.service"
+    owner: root
+    group: root
+    mode: 444
+    seuser: system_u
+    serole: object_r
+    setype: systemd_unit_file_t
+
+- name: Increase system max virtual memory count
+  become: true
+  ansible.posix.sysctl:
+    name: vm.max_map_count
+    value: 262144
+    reload: true
+    state: present
+
+- name: Enable the sonarqube systemd service
+  become: true
+  ansible.builtin.systemd:
+    name: sonarqube
+    state: started
+    daemon_reload: true
+    enabled: true

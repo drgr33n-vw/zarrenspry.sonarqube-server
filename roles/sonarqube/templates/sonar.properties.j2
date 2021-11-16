@@ -1,0 +1,139 @@
+# {{ ansible_managed }}
+sonar.jdbc.username={{ database.sonarqube.username }}
+sonar.jdbc.password={{ database.sonarqube.password }}
+sonar.jdbc.url=jdbc:postgresql://{{ database.sonarqube.host }}/{{ database.sonarqube.name }}
+sonar.web.javaOpts={{ sonarqube_web_javaopts }}
+#sonar.web.javaAdditionalOpts=
+sonar.web.host={{ sonarqube_web_host }}
+sonar.web.context={{ sonarqube_web_context }}
+sonar.web.port={{ sonarqube_web_port }}
+sonar.auth.jwtBase64Hs256Secret={{ sonarqube_auth_jwt_secret }}
+
+{% if sonarqube_sso_enabled %}
+sonar.web.sso.enable=true
+sonar.web.sso.loginHeader={{ sonarqube_sso_headers.login }}
+sonar.web.sso.nameHeader={{ sonarqube_sso_headers.name }}
+sonar.web.sso.emailHeader={{ sonarqube_sso_headers.name }}
+sonar.web.sso.groupsHeader={{ sonarqube_sso_headers.groups }}
+sonar.web.sso.refreshIntervalInMinutes={{ sonarqube_sso_refresh_interval }}
+{% endif %}
+{% if sonarqube_ldap_enabled %}
+sonar.security.realm=LDAP
+sonar.authenticator.downcase={{ sonarqube_auth_downcase }}
+ldap.url=ldap://{{ sonarqube_ldap_host }}:{{ sonarqube_ldap_port }}
+{% if sonarqube_ldap_binddn | length > 0 %}
+ldap.bindDn={{ sonarqube_ldap_binddin }}
+{% endif %}
+{% if sonarqube_ldap_bind_password | length > 0 %}
+ldap.bindPassword={{ sonarqube_ldap_bind_password }}
+{% endif %}
+ldap.authentication={{ sonarqube_ldap_auth_method }}
+ldap.realm={{ sonarqube_ldap_realm }}
+{% if sonarqube_ldap_cxfactory | length > 0 %}
+ldap.contextFactoryClass={{ sonarqube_ldap_cxfactory }}
+{% endif %}
+ldap.StartTLS={{ sonarqube_ldap_starttls }}
+ldap.followReferrals={{ sonarqube_ldap_follow_referrals }}
+
+# USER MAPPING
+ldap.user.baseDn={{ sonarqube_ldap_user_mapping.basedn }}
+ldap.user.request={{ sonarqube_ldap_user_mapping.request }}
+ldap.user.realNameAttribute={{ sonarqube_ldap_user_mapping.real_name }}
+ldap.user.emailAttribute={{ sonarqube_ldap_user_mapping.email }}
+
+# GROUP MAPPING
+ldap.group.baseDn={{ sonarqube_ldap_group_mapping.basedn }}
+ldap.group.request={{ sonarqube_ldap_group_mapping.request }}
+# ldap.group.idAttribute={{ sonarqube_ldap_group_mapping.id }}
+{% endif %}
+# COMPUTE ENGINE
+sonar.ce.javaOpts={{ sonarqube_ce_javaopts }}
+#sonar.ce.javaAdditionalOpts=
+
+# ELASTICSEARCH
+
+sonar.search.javaOpts={{ sonarqube_elasticsearch_javaopts }}
+#sonar.search.javaAdditionalOpts=
+sonar.search.port={{ sonarqube_elasticsearch_port }}
+
+# TODO: Should really add these to the default vars
+# Elasticsearch TCP transport port that is bound to loopback address. When nothing is set, a random port will be chosen.
+# As a security precaution, your OS configuration should not expose this port for external access.
+#sonar.es.port=
+
+# Elasticsearch host. The search server will bind this address and the search client will connect to it.
+# Default is loopback address.
+# As a security precaution, should NOT be set to a publicly available address.
+#sonar.search.host=
+
+
+# UPDATE CENTER
+{% if sonarqube_update_center.enabled %}
+sonar.updatecenter.activate={{ sonarqube_update_center.enabled }}
+
+{% if sonarqube_update_center.proxy_enabled %}
+# HTTP proxy (default none)
+#http.proxyHost=
+#http.proxyPort=
+# HTTPS proxy (defaults are values of http.proxyHost and http.proxyPort)
+#https.proxyHost=
+#https.proxyPort=
+{% endif %}
+
+# TODO: Need to add the rest of the proxy configuration
+# NT domain name if NTLM proxy is used
+#http.auth.ntlm.domain=
+
+# SOCKS proxy (default none)
+#socksProxyHost=
+#socksProxyPort=
+
+# Proxy authentication (used for HTTP, HTTPS and SOCKS proxies)
+#http.proxyUser=
+#http.proxyPassword=
+
+# Proxy exceptions: list of hosts that can be accessed without going through the proxy
+#                   separated by the '|' character, wildcard character '*' can be used for pattern matching
+#                   used for HTTP and HTTPS (default none)
+#                   (note: localhost and its literal notations (127.0.0.1, ...) are always excluded)
+#http.nonProxyHosts=
+{% endif %}
+
+# LOGGING
+sonar.log.level={{ sonarqube_loglevel.global }}
+sonar.log.level.app={{ sonarqube_loglevel.app }}
+sonar.log.level.web={{ sonarqube_loglevel.web }}
+sonar.log.level.ce={{ sonarqube_loglevel.ce }}
+sonar.log.level.es={{ sonarqube_loglevel.global }}
+sonar.path.logs={{ sonarqube_log_path }}
+sonar.log.rollingPolicy={{ sonarqube_log_rolling_policy }}
+sonar.log.maxFiles={{ sonarqube_log_max_files }}
+sonar.web.accessLogs.enable={{ sonarqube_log_web_access }}
+
+# TODO: Add log formatting to defaults
+# Format of access log. It is ignored if sonar.web.accessLogs.enable=false. Possible values are:
+#    - "common" is the Common Log Format, shortcut to: %h %l %u %user %date "%r" %s %b
+#    - "combined" is another format widely recognized, shortcut to: %h %l %u [%t] "%r" %s %b "%i{Referer}" "%i{User-Agent}"
+#    - else a custom pattern. See http://logback.qos.ch/manual/layouts.html#AccessPatternLayout.
+# The login of authenticated user is not implemented with "%u" but with "%reqAttribute{LOGIN}" (since version 6.1).
+# The value displayed for anonymous users is "-".
+# The SonarQube's HTTP request ID can be added to the pattern with "%reqAttribute{ID}" (since version 6.2).
+# If SonarQube is behind a reverse proxy, then the following value allows to display the correct remote IP address:
+#sonar.web.accessLogs.pattern=%i{X-Forwarded-For} %l %u [%t] "%r" %s %b "%i{Referer}" "%i{User-Agent}" "%reqAttribute{ID}"
+# Default value (which was "combined" before version 6.2) is equivalent to "combined + SQ HTTP request ID":
+#sonar.web.accessLogs.pattern=%h %l %u [%t] "%r" %s %b "%i{Referer}" "%i{User-Agent}" "%reqAttribute{ID}"
+
+
+# OTHERS
+sonar.telemetry.enable={{ sonarqube_enable_telemetry }}
+
+# TODO: Need to add everything below to defaults
+# Delay in seconds between processing of notification queue. Default is 60 seconds.
+#sonar.notifications.delay=60
+
+# Paths to persistent data files (embedded database and search index) and temporary files.
+# Can be absolute or relative to installation directory.
+# Defaults are respectively <installation home>/data and <installation home>/temp
+#sonar.path.data=data
+#sonar.path.temp=temp
+
