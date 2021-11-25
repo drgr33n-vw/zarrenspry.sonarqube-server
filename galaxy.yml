@@ -1,5 +1,5 @@
 namespace: zarrenspry
-name: sonaqube
+name: sonarqube
 version: 1.0.0
 readme: README.md
 authors:
